@@ -6,6 +6,8 @@ from typing import Optional
 from pydantic import BaseSettings
 from yarl import URL
 
+import os
+
 TEMP_DIR = Path(gettempdir())
 
 
@@ -119,6 +121,10 @@ class Settings(BaseSettings):
             password=self.rabbit_pass,
             path=self.rabbit_vhost,
         )
+
+    @property
+    def omdb_api_key(self) -> str:
+        return os.getenv("OMDB_API_KEY", "")
 
     class Config:
         env_file = ".env"
