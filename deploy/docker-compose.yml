@@ -1,0 +1,90 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+      target: prod
+    image: fastapi_movie_app:${FASTAPI_MOVIE_APP_VERSION:-latest}
+    restart: always
+    env_file:
+    - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rmq:
+        condition: service_healthy
+    environment:
+      FASTAPI_MOVIE_APP_HOST: 0.0.0.0
+      FASTAPI_MOVIE_APP_DB_HOST: fastapi_movie_app-db
+      FASTAPI_MOVIE_APP_DB_PORT: 5432
+      FASTAPI_MOVIE_APP_DB_USER: fastapi_movie_app
+      FASTAPI_MOVIE_APP_DB_PASS: fastapi_movie_app
+      FASTAPI_MOVIE_APP_DB_BASE: fastapi_movie_app
+      FASTAPI_MOVIE_APP_RABBIT_HOST: fastapi_movie_app-rmq
+      FASTAPI_MOVIE_APP_REDIS_HOST: fastapi_movie_app-redis
+
+  db:
+    image: postgres:13.8-bullseye
+    hostname: fastapi_movie_app-db
+    environment:
+      POSTGRES_PASSWORD: "fastapi_movie_app"
+      POSTGRES_USER: "fastapi_movie_app"
+      POSTGRES_DB: "fastapi_movie_app"
+    volumes:
+    - fastapi_movie_app-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: pg_isready -U fastapi_movie_app
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  migrator:
+    image: fastapi_movie_app:${FASTAPI_MOVIE_APP_VERSION:-latest}
+    restart: "no"
+    command: alembic upgrade head
+    environment:
+      FASTAPI_MOVIE_APP_DB_HOST: fastapi_movie_app-db
+      FASTAPI_MOVIE_APP_DB_PORT: 5432
+      FASTAPI_MOVIE_APP_DB_USER: fastapi_movie_app
+      FASTAPI_MOVIE_APP_DB_PASS: fastapi_movie_app
+      FASTAPI_MOVIE_APP_DB_BASE: fastapi_movie_app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: bitnami/redis:6.2.5
+    hostname: "fastapi_movie_app-redis"
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50
+
+  rmq:
+    image: rabbitmq:3.9.16-alpine
+    hostname: "fastapi_movie_app-rmq"
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    healthcheck:
+      test: rabbitmq-diagnostics check_running -q
+      interval: 3s
+      timeout: 3s
+      retries: 50
+
+
+
+volumes:
+  fastapi_movie_app-db-data:
+    name: fastapi_movie_app-db-data
