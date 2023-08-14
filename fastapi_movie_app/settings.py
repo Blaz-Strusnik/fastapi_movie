@@ -1,12 +1,11 @@
 import enum
+import os
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Optional
 
 from pydantic import BaseSettings
 from yarl import URL
-
-import os
 
 TEMP_DIR = Path(gettempdir())
 
@@ -124,6 +123,11 @@ class Settings(BaseSettings):
 
     @property
     def omdb_api_key(self) -> str:
+        """
+        Get the OMDB API key from environment variables.
+
+        :return: str: The OMDB API key as a string.
+        """
         return os.getenv("OMDB_API_KEY", "")
 
     class Config:

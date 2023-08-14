@@ -1,6 +1,6 @@
 from fastapi.routing import APIRouter
 
-from fastapi_movie_app.web.api import docs, dummy, echo, monitoring, rabbit, redis, omdb
+from fastapi_movie_app.web.api import docs, dummy, echo, monitoring, omdb, rabbit, redis
 
 api_router = APIRouter()
 api_router.include_router(monitoring.router)
