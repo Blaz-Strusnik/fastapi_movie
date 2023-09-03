@@ -540,4 +540,7 @@ fastapi_movie_app,
 └─ pyproject.toml,
 
 ```
-#### this project was created with the help of s3rius/FastAPI-template
+## Credits
+
+### Template Generator
+This project was generated using a template generator that simplifies the setup of a Fastapi project. The template generator is not part of this repository. You can find the template generator [here](https://github.com/s3rius/FastAPI-template).
